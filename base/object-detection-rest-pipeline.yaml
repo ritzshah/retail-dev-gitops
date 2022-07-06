@@ -1,0 +1,117 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  labels:
+    app.kubernetes.io/instance: object-detection-rest
+    app.kubernetes.io/name: object-detection-rest
+    pipeline.openshift.io/runtime: python
+    pipeline.openshift.io/runtime-version: 3.9-ubi8
+    pipeline.openshift.io/type: kubernetes
+  name: object-detection-rest
+  namespace: "retail-rhods-project"
+spec:
+  params:
+  - default: object-detection-rest
+    name: APP_NAME
+    type: string
+  - default: "https://gitea.apps.cluster-xxjsm.sandbox502.opentlc.com/lab-user/arc-model.git"
+    name: GIT_REPO
+    type: string
+  - default: ""
+    name: GIT_REVISION
+    type: string
+  - default: "image-registry.openshift-image-registry.svc:5000/retail-rhods-project/object-detection-rest"
+    name: IMAGE_NAME
+    type: string
+  - default: .
+    name: PATH_CONTEXT
+    type: string
+  - default: 3.9-ubi8
+    name: VERSION
+    type: string
+  - name: NAMESPACE_DEV
+    type: string
+    description: Namespace where the buildconfig is located
+    default: retail-rhods-project
+
+  tasks:
+  - name: fetch-model-repo
+    params:
+    - name: url
+      value: $(params.GIT_REPO)
+    - name: revision
+      value: $(params.GIT_REVISION)
+    - name: subdirectory
+      value: ""
+    - name: deleteExisting
+      value: "true"
+    taskRef:
+      kind: ClusterTask
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: workspace
+
+  - name: generate-tag
+    taskRef:
+      kind: Task
+      name: generate-tag
+
+  - name: build-model-image
+    params:
+    - name: IMAGE
+      value: $(params.IMAGE_NAME)
+    - name: TLSVERIFY
+      value: "false"
+    - name: PATH_CONTEXT
+      value: $(params.PATH_CONTEXT)
+    - name: VERSION
+      value: $(params.VERSION)
+    runAfter:
+    - fetch-model-repo
+    - generate-tag      
+    taskRef:
+      kind: ClusterTask
+      name: s2i-python
+    workspaces:
+    - name: source
+      workspace: workspace
+
+  - name: tag-image-for-development
+    runAfter:
+    - build-model-image
+    taskRef:
+      kind: ClusterTask
+      name: openshift-client
+    params:
+    - name: SCRIPT
+      value: >-
+        oc tag
+        \$(params.NAMESPACE_DEV)/\$(params.APP_NAME):latest
+        \$(params.NAMESPACE_DEV)/\$(params.APP_NAME):dev-\$(tasks.generate-tag.results.image-tag)
+
+  - name: set-image-in-dev
+    runAfter:
+    - tag-image-for-development
+    taskRef:
+      kind: ClusterTask
+      name: openshift-client
+    params:
+    - name: SCRIPT
+      value: >-
+        oc set image deployment
+        \$(params.APP_NAME)
+        \$(params.APP_NAME)=image-registry.openshift-image-registry.svc:5000/\$(params.NAMESPACE_DEV)/\$(params.APP_NAME):dev-\$(tasks.generate-tag.results.image-tag)
+        -n \$(params.NAMESPACE_DEV)
+
+  - name: deploy-model-in-dev
+    params:
+    - name: SCRIPT
+      value: oc rollout status deploy/$(params.APP_NAME)
+    runAfter:
+    - set-image-in-dev
+    taskRef:
+      kind: ClusterTask
+      name: openshift-client
+  workspaces:
+  - name: workspace

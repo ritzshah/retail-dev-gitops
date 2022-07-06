@@ -1,0 +1,8 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  generateName: generate-tag-
+spec:
+  taskRef:
+    kind: Task
+    name: generate-tag

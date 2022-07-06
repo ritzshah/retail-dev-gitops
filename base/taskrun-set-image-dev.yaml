@@ -1,0 +1,14 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  generateName: set-image-
+spec:
+  taskRef:
+    kind: ClusterTask
+    name: openshift-client
+  params:
+  - name: SCRIPT
+    value: >-
+      oc set image deployment object-detection-rest
+      object-detection-rest=image-registry.openshift-image-registry.svc:5000/retail-rhods-project/object-detection-rest:dev-${IMAGE_TAG}
+      -n retail-rhods-project

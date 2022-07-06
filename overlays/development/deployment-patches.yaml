@@ -1,0 +1,12 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: object-detection-rest
+  namespace: "retail-rhods-project"
+spec:
+  template:
+    spec:
+      containers:
+      - name: object-detection-rest              
+        image: "image-registry.openshift-image-registry.svc:5000/retail-rhods-project/object-detection-rest:dev-2022-07-04-12-26-37"
