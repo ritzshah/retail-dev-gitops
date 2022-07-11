@@ -24,7 +24,7 @@ spec:
       - name: APP_NAME
         value: "object-detection-rest"
       - name: GIT_REPO
-        value: "https://gitea.apps.cluster-xxjsm.sandbox502.opentlc.com/lab-user/arc-model.git"
+        value: "https://gitea.apps.cluster-guid.ocp4_base_domain/lab-user/arc-model.git"
       - name: GIT_REVISION
         value: ""
       - name: IMAGE_NAME
