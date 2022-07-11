@@ -8,7 +8,7 @@ metadata:
       fieldPath":"spec.template.spec.containers[?(@.name==\"object-detection-app-git\")].image","pause":"false"}]
     app.openshift.io/route-disabled: "false"
     app.openshift.io/vcs-ref: ""
-    app.openshift.io/vcs-uri: https://github.com/rh-aiservices-bu/object-detection-app.git
+    app.openshift.io/vcs-uri: https://github.com/rh-aiservices-bu/arc-frontend.git
   labels:
     app: object-detection-app-git
     app.kubernetes.io/component: object-detection-app-git
