@@ -33,6 +33,34 @@ spec:
         value: .
       - name: VERSION
         value: 3.9-ubi8
+      - name: KUSTOMIZE_GIT_URL_DEV
+        type: string
+        description: The kustomize git repository url
+        default: https://gitea.apps.cluster-guid.ocp4_base_domain/lab-user/retail-dev-gitops.git
+      - name: KUSTOMIZE_GIT_CONTEXT_DIR_DEV
+        type: string
+        default: overlays/development/
+        description: The subdirectory in the kustomize git repository
+      - name: KUSTOMIZE_GIT_URL
+        type: string
+        description: The kustomize git repository url
+        default: https://gitea.apps.cluster-guid.ocp4_base_domain/lab-user/retail-prod-gitops.git
+      - name: KUSTOMIZE_GIT_REVISION
+        type: string
+        default: main
+        description: The kustomize git repository revision
+      - name: KUSTOMIZE_GIT_CONTEXT_DIR
+        type: string
+        default: overlays/production/
+        description: The subdirectory in the kustomize git repository
+      - name: KUSTOMIZE_GIT_FILE_NAME
+        type: string
+        default: deployment-patches.yaml
+        description: The YAML file in which to patch the image
+      - name: NAMESPACE_DEV
+        type: string
+        description: Namespace where the buildconfig is located
+        default: retail-rhods-project
       pipelineRef:
         name: object-detection-rest
       serviceAccountName: pipeline
