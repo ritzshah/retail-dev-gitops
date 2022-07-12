@@ -47,17 +47,14 @@ spec:
 
       set -eu -o pipefail
 
-      if [[ "\$(params.verbose)" == "true" ]] ; then
+      if [[ "$(params.verbose)" == "true" ]] ; then
         set -x
-        echo "**** Cloning \$(params.gitRepositoryUrl) into \$(pwd)/repository"
+        echo "**** Cloning $(params.gitRepositoryUrl) into $(pwd)/repository"
       fi
 
-      git clone "\$(params.gitRepositoryUrl)" \$(pwd)/repository
-      echo "cd to repository"
+      git clone "$(params.gitRepositoryUrl)" $(pwd)/repository
       cd repository
-      ls -la
-      echo "git checkout \$(params.gitRepositoryRevision)"
-      git checkout "\$(params.gitRepositoryRevision)"
+      git checkout "$(params.gitRepositoryRevision)"
 
   - name: update-yaml
     image: alpine/git:v2.26.2
@@ -69,11 +66,13 @@ spec:
       #!/usr/bin/env sh
       set -e
 
-      if [[ "\$(params.verbose)" == "true" ]] ; then
-        echo "**** Updating \$(params.fileName) image to \$(params.image):\$(params.imageTag)"
+      if [[ "$(params.verbose)" == "true" ]] ; then
+        echo "**** Updating $(params.fileName) image to $(params.image):$(params.imageTag)"
       fi
 
-      sed -i "s#\$(params.image):[a-zA-Z0-9-]\\\\+#\$(params.image):\$(params.imageTag)#" ./\$(params.gitPath)/\$(params.fileName)
+      sed -i "s#$(params.image):dev-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]#$(params.image):$(params.imageTag)#" ./$(params.gitPath)/$(params.fileName)
+      echo "View contents of the deployment patch file"
+      cat ./$(params.gitPath)/$(params.fileName)
 
   - name: commit-push-changes
     image: alpine/git:v2.26.2
@@ -88,5 +87,6 @@ spec:
       git config --global user.email "tekton@tekton.dev"
       git config --global user.name "OpenShift Pipeline"
       git add .
-      git commit --allow-empty -m "[OpenShift Pipeline] Updating \$(params.fileName) image to \$(params.image):\$(params.imageTag)"
-      git push origin "\$(params.gitRepositoryRevision)"
+      git commit --allow-empty -m "[OpenShift Pipeline] Updating $(params.fileName) image to $(params.image):$(params.imageTag)"
+      echo "Pushing to $(params.gitRepositoryRevision)"
+      git push origin "$(params.gitRepositoryRevision)"

@@ -33,6 +33,26 @@ spec:
     type: string
     description: Namespace where the buildconfig is located
     default: retail-rhods-project
+  - name: KUSTOMIZE_GIT_URL
+    type: string
+    description: The kustomize git repository url
+    default: https://gitea.apps.cluster-guid.ocp4_base_domain/lab-user/retail-prod-gitops.git
+  - name: KUSTOMIZE_GIT_REVISION
+    type: string
+    default: main
+    description: The kustomize git repository revision
+  - name: KUSTOMIZE_GIT_CONTEXT_DIR
+    type: string
+    default: overlays/production/
+    description: The subdirectory in the kustomize git repository
+  - name: KUSTOMIZE_GIT_FILE_NAME
+    type: string
+    default: deployment-patches.yaml
+    description: The YAML file in which to patch the image
+  - name: NAMESPACE_DEV
+    type: string
+    description: Namespace where the buildconfig is located
+    default: retail-rhods-project
 
   tasks:
   - name: fetch-model-repo
@@ -113,5 +133,26 @@ spec:
     taskRef:
       kind: ClusterTask
       name: openshift-client
+  - name: update-kustomize-repo
+    runAfter:
+    - deploy-model-in-dev
+    taskRef:
+      kind: Task
+      name: update-kustomize-repo
+    params:
+    - name: gitRepositoryUrl
+      value: $(params.KUSTOMIZE_GIT_URL)
+    - name: gitRepositoryRevision
+      value: $(params.KUSTOMIZE_GIT_REVISION)
+    - name: gitPath
+      value: $(params.KUSTOMIZE_GIT_CONTEXT_DIR)
+    - name: fileName
+      value: $(params.KUSTOMIZE_GIT_FILE_NAME)
+    - name: image
+      value: $(params.IMAGE_NAME)
+    - name: imageTag
+      value: dev-$(tasks.generate-tag.results.image-tag)
+    - name: verbose
+      value: 'true' 
   workspaces:
   - name: workspace
