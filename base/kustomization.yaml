@@ -19,7 +19,9 @@ resources:
 - ./object-detection-rest-route.yaml
 - ./object-detection-rest-service.yaml
 - ./pipeline-service-account.yaml
-- ./task-generate-tag.yaml  
+- ./task-generate-tag.yaml
+- ./task-update-kustomize-repo-dev.yaml
+- ./task-update-kustomize-repo.yaml
 - ./object-detection-rest-pipeline.yaml
 - ./trigger-template.yaml
 - ./trigger-binding.yaml

@@ -1,3 +1,4 @@
+---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
@@ -29,10 +30,14 @@ spec:
   - default: 3.9-ubi8
     name: VERSION
     type: string
-  - name: NAMESPACE_DEV
+  - name: KUSTOMIZE_GIT_URL_DEV
     type: string
-    description: Namespace where the buildconfig is located
-    default: retail-rhods-project
+    description: The kustomize git repository url
+    default: https://gitea.apps.cluster-guid.ocp4_base_domain/lab-user/retail-dev-gitops.git
+  - name: KUSTOMIZE_GIT_CONTEXT_DIR_DEV
+    type: string
+    default: overlays/development/
+    description: The subdirectory in the kustomize git repository
   - name: KUSTOMIZE_GIT_URL
     type: string
     description: The kustomize git repository url
@@ -124,16 +129,39 @@ spec:
         \$(params.APP_NAME)=image-registry.openshift-image-registry.svc:5000/\$(params.NAMESPACE_DEV)/\$(params.APP_NAME):dev-\$(tasks.generate-tag.results.image-tag)
         -n \$(params.NAMESPACE_DEV)
 
+  - name: update-kustomize-repo-dev
+    runAfter:
+    - set-image-in-dev
+    taskRef:
+      kind: Task
+      name: update-kustomize-repo-dev
+    params:
+    - name: gitRepositoryUrl
+      value: $(params.KUSTOMIZE_GIT_URL_DEV)
+    - name: gitRepositoryRevision
+      value: $(params.KUSTOMIZE_GIT_REVISION)
+    - name: gitPath
+      value: $(params.KUSTOMIZE_GIT_CONTEXT_DIR_DEV)
+    - name: fileName
+      value: $(params.KUSTOMIZE_GIT_FILE_NAME)
+    - name: image
+      value: $(params.IMAGE_NAME)
+    - name: imageTag
+      value: dev-$(tasks.generate-tag.results.image-tag)
+    - name: verbose
+      value: 'true'
+
   - name: deploy-model-in-dev
     params:
     - name: SCRIPT
       value: oc rollout status deploy/$(params.APP_NAME)
     runAfter:
-    - set-image-in-dev
+    - update-kustomize-repo-dev
     taskRef:
       kind: ClusterTask
       name: openshift-client
-  - name: update-kustomize-repo
+
+  - name: update-kustomize-repo-prod
     runAfter:
     - deploy-model-in-dev
     taskRef:
