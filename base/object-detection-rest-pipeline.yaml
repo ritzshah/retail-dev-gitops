@@ -82,6 +82,25 @@ spec:
       kind: Task
       name: generate-tag
 
+  - name: sanity-check-model    
+    params:
+    - name: gitRepositoryUrl
+      value: $(params.GIT_REPO)
+    - name: gitRepositoryRevision
+      value: $(params.GIT_REVISION)
+    - name: gitPath
+      value: "."
+    - name: fileName
+      value: ./output.txt
+    - name: verbose
+      value: "true"
+    taskRef:
+      kind: Task
+      name: sanity-check-model    
+    runAfter:
+    - fetch-model-repo
+    - generate-tag
+
   - name: build-model-image
     params:
     - name: IMAGE
@@ -93,8 +112,7 @@ spec:
     - name: VERSION
       value: $(params.VERSION)
     runAfter:
-    - fetch-model-repo
-    - generate-tag      
+    - sanity-check-model
     taskRef:
       kind: ClusterTask
       name: s2i-python

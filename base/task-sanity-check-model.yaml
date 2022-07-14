@@ -2,9 +2,9 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: update-kustomize-repo-dev
+  name: sanity-check-model
   annotations:
-    tekton.dev/displayName: "Update Dev Kustomize Git Repository"
+    tekton.dev/displayName: "Sanity Check Model"
 spec:
   params:
   - name: gitRepositoryUrl
@@ -13,7 +13,7 @@ spec:
   - name: gitRepositoryRevision
     description: Branch or Tag to push the update to
     type: string
-    default: master
+    default: dev
   - name: gitPath
     description: Path in the repository to work in.
     type: string
@@ -21,72 +21,34 @@ spec:
   - name: fileName
     description: Name of the file to be updated
     type: string
-    default: ./deployment-patch.yaml
-  - name: image
-    description: The image to be written into the YAML
-    type: string
-  - name: imageTag
-    description: The image tag to be written into the YAML
-    type: string
+    default: ./output.txt
   - name: verbose
     description: Log the commands used during execution
     type: string
     default: "true"
+  results:
+  - name: sanity_exit_status
+    description: The Exit status of the task sanity check  
   volumes:
   - name: repository
     emptyDir: {}
   steps:
-  - name: git-checkout
-    image: alpine/git:v2.26.2
-    workingDir: "/workspace"
+  - name: sanity-check
+    image: python:3.8
+    workingDir: "/workspace/repository"
     volumeMounts:
     - name: repository
       mountPath: /workspace/repository
     script: |
-      #!/usr/bin/env sh
-
-      set -eu -o pipefail
-
-      if [[ "$(params.verbose)" == "true" ]] ; then
-        set -x
-        echo "**** Cloning $(params.gitRepositoryUrl) into $(pwd)/repository"
-      fi
-
+      #!/usr/bin/env bash
+      set -e
       git clone "$(params.gitRepositoryUrl)" $(pwd)/repository
       cd repository
       git checkout "$(params.gitRepositoryRevision)"
-
-  - name: update-yaml
-    image: alpine/git:v2.26.2
-    workingDir: "/workspace/repository"
-    volumeMounts:
-    - name: repository
-      mountPath: /workspace/repository
-    script: |
-      #!/usr/bin/env sh
-      set -e
-
-      if [[ "$(params.verbose)" == "true" ]] ; then
-        echo "**** Updating $(params.fileName) image to $(params.image):$(params.imageTag)"
-      fi
-
-      sed -i "s#$(params.image):dev-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]#$(params.image):$(params.imageTag)#" ./$(params.gitPath)/$(params.fileName)
-      echo "View contents of the deployment patch file"
-      cat ./$(params.gitPath)/$(params.fileName)
-
-  - name: commit-push-changes
-    image: alpine/git:v2.26.2
-    workingDir: "/workspace/repository"
-    volumeMounts:
-    - name: repository
-      mountPath: /workspace/repository
-    script: |
-      #!/usr/bin/env sh
-      set -e
-
-      git config --global user.email "tekton@tekton.dev"
-      git config --global user.name "OpenShift Pipeline"
-      git add .
-      git commit --allow-empty -m "[OpenShift Pipeline] Updating $(params.fileName) image to $(params.image):$(params.imageTag)"
-      echo "Pushing to $(params.gitRepositoryRevision)"
-      git push origin "$(params.gitRepositoryRevision)"
+      pip install -r ./requirements.txt
+      echo "Requirments file installed"
+      python sanitycheck.py
+      #python sanityfail.py
+      echo $? | tee $(results.sanity_exit_status.path)
+      echo -n "$(results.sanity_exit_status.path)"
+      echo "Completed the sanity check"
