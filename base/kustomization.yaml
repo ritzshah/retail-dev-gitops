@@ -22,6 +22,7 @@ resources:
 - ./task-generate-tag.yaml
 - ./task-update-kustomize-repo-dev.yaml
 - ./task-update-kustomize-repo.yaml
+- ./task-sanity-check-model.yaml
 - ./object-detection-rest-pipeline.yaml
 - ./trigger-template.yaml
 - ./trigger-binding.yaml
