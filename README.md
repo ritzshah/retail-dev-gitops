@@ -1,1 +1,1 @@
-This repsitory contains manifest for retail project creation as well as related pipeline and argocd setup.
+This repository contains manifest for retail project creation as well as related pipeline and argocd setup.
