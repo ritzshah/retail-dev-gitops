@@ -13,4 +13,5 @@ spec:
     repoURL: https://gitea.apps.cluster-guid.ocp4_base_domain/lab-user/retail-dev-gitops.git
     targetRevision: HEAD
   syncPolicy:
-    automated: {}    
+    automated:
+      selfHeal: true
