@@ -26,7 +26,7 @@ spec:
       - name: GIT_REPO
         value: "https://gitea.apps.cluster-guid.ocp4_base_domain/lab-user/arc-model.git"
       - name: GIT_REVISION
-        value: "dev"
+        value: "main"
       - name: IMAGE_NAME
         value: "image-registry.openshift-image-registry.svc:5000/retail-rhods-project/object-detection-rest"
       - name: PATH_CONTEXT
