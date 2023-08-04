@@ -10,5 +10,5 @@ resources:
 
 namespace: "retail-rhods-project"
 
-patches:
+patchesStrategicMerge:
 - ./deployment-patches.yaml
